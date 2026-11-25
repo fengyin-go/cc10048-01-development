@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from app.services.base import BaseModuleService
+from app.services.cohort_contribution import contribution_service
 from app.store import store
 
 
@@ -31,6 +32,11 @@ class CohortService(BaseModuleService):
         base_scale = rng.randint(10000, 10000000)
         scaled = int(base_scale / (complexity * 1.5))
         freshness = "新鲜" if scaled > 100000 else "适中"
+        membership = contribution_service.catalog()
+        ready = next(
+            (item for item in membership["cohorts"] if item["cohort_id"] == cohort_id),
+            None,
+        )
         return {
             "cohort_id": cohort_id,
             "cohort_name": cohort.get("分群名称"),
@@ -38,6 +44,7 @@ class CohortService(BaseModuleService):
             "estimated_scale": scaled,
             "base_date": cohort.get("基准日期"),
             "freshness_assessment": freshness,
+            "contribution_ready": bool(ready and ready["contribution_ready"]),
         }
 
     def domain_enrich(self, config_id: int) -> dict:

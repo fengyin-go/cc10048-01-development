@@ -79,3 +79,35 @@ npm run dev
 
 领域：数据工程
 子方向：数据分析与数据应用
+
+## 人群圈选成交贡献明细
+
+在「人群圈选」模块旁新增「成交贡献」工作台（`/cohort-contribution`），
+用于按两组圈选名单核对统计窗口内的成交金额。
+
+- 贡献看板：分别展示 A、B 两组各自计入金额、独占金额、交叠计入金额，
+  并用「两组计入合计」与窗口内去重订单金额对平。
+- 交叠口径：同一订单同时命中两组时按交叠均分拆到两组，分位余数按 A→B 补齐，
+  两组相加等于原金额；汇总时同一订单只计一次。
+- 按组下钻：`GET /api/cohort-contribution/views/{view_id}/groups/{A|B}`
+  从原始订单明细复算该组实际计入的订单与用户金额。
+- 用户分析下钻：`GET /api/chains/cohort-analysis/{cohort_id}?view_id=` 的
+  `contribution_orders` 读取成交贡献明细视图，按圈选组核对订单号、原金额和组内计入金额。
+- 发布快照：发布视图时冻结两组名单版本；次日名单刷新后旧期视图仍按原快照复算，
+  金额始终从原始订单数据重算，不复用发布时的汇总。
+
+样例（2026-09-01 期）：A 独享 40 元、B 独享 20 元、共享 60 元，
+A 组计入 70 元、B 组计入 50 元，两组合计 120 元，与去重订单 120 元对平；
+交叠用户 U1003 的 60 元在 A 组实际计入 30 元。
+
+接口一览：
+
+```text
+GET  /api/cohort-contribution/catalog
+GET  /api/cohort-contribution/views
+POST /api/cohort-contribution/views
+GET  /api/cohort-contribution/preview
+GET  /api/cohort-contribution/views/{view_id}
+GET  /api/cohort-contribution/views/{view_id}/groups/{group_key}
+POST /api/cohort-contribution/cohorts/{cohort_id}/membership/refresh
+```

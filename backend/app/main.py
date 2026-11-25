@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import ROUTERS
 from app.routers.chains import router as chains_router
+from app.routers.cohort_contribution import router as contribution_router
 from app.routers.domain import router as domain_router
 from app.store import store
 
@@ -38,6 +39,9 @@ def overview() -> dict[str, object]:
 
 # 业务链路路由
 app.include_router(chains_router)
+
+# 人群圈选成交贡献路由
+app.include_router(contribution_router)
 
 # 领域业务操作路由
 app.include_router(domain_router)

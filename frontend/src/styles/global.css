@@ -70,3 +70,19 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .analysis-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 12px 0; }
 .analysis-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--brand); min-width: 24px; position: relative; transition: height 0.4s; }
 .analysis-bar span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+/* 成交贡献明细 */
+.contribution-page .banner { margin: 0 0 12px; padding: 8px 12px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-size: 13px; }
+.contribution-page .banner.error { background: #fef2f2; color: #b42318; }
+.contribution-page .stat-card .stat-sub { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.contribution-page .form-hint { color: var(--muted); font-size: 12px; align-self: center; }
+.contribution-page .view-switch { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.contribution-page .view-switch-label { color: var(--muted); font-size: 12px; }
+.contribution-page .view-switch .btn small { display: block; color: inherit; opacity: 0.7; font-size: 10px; }
+.contribution-page .panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.contribution-page .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.contribution-page .panel-head h3 { margin: 0; font-size: 15px; }
+.contribution-page .panel-meta { color: var(--muted); font-size: 12px; }
+.contribution-page .sub-title { margin: 16px 0 8px; font-size: 14px; }
+.contribution-page .warn-text { color: #b45309; }
+.contribution-page .trend-up { color: #15803d; }
+.contribution-page .trend-down { color: #b42318; }

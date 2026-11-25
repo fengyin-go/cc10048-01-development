@@ -29,3 +29,20 @@ class EntryPayload(BaseModel):
 class ActionPayload(BaseModel):
     action: str
     remark: str | None = None
+
+
+class ContributionViewPayload(BaseModel):
+    """发布成交贡献视图：两组圈选名单 + 统计窗口。"""
+
+    cohort_a_id: int
+    cohort_b_id: int
+    window_start: str | None = None
+    window_end: str | None = None
+    label: str | None = None
+
+
+class MembershipRefreshPayload(BaseModel):
+    """刷新圈选名单；不传增删用户时按预置的次日名单变化执行。"""
+
+    add_users: list[str] | None = None
+    remove_users: list[str] | None = None

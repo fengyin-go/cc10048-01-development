@@ -12,6 +12,7 @@ from app.compute import (
     chi_square_test, compute_calibrate_bias, compute_freshness_delay,
     generate_mock_metric_values, random_sample, segment_diff_report, t_test,
 )
+from app.services.cohort_contribution import contribution_service
 from app.store import store
 
 router = APIRouter(prefix="/api/chains", tags=["业务链路"])
@@ -164,8 +165,11 @@ def chain_experiment_evaluate(experiment_id: int) -> dict[str, Any]:
 
 # ---- 链路3：人群圈选→分群对比→下钻分析 ----
 @router.get("/cohort-analysis/{cohort_id}")
-def chain_cohort_analysis(cohort_id: int) -> dict[str, Any]:
-    """人群圈选→分群对比→下钻分析的用户分析链路。"""
+def chain_cohort_analysis(cohort_id: int, view_id: int | None = None) -> dict[str, Any]:
+    """人群圈选→分群对比→下钻分析的用户分析链路。
+
+    指定 view_id 时读取该期成交贡献视图（可核对旧期快照），否则读最近一期。
+    """
     cohort = store.find("cohort", cohort_id)
     if not cohort:
         raise HTTPException(404, f"人群分群 {cohort_id} 不存在")
@@ -218,6 +222,67 @@ def chain_cohort_analysis(cohort_id: int) -> dict[str, Any]:
         "metric_timeline": metric_values[:10],
         "segment_comparisons": compare_results,
         "drill_down_analysis": drill_results,
+        "contribution_orders": contribution_orders(cohort_id, view_id),
+    }
+
+
+def contribution_orders(cohort_id: int, view_id: int | None = None) -> dict[str, Any]:
+    """读取成交贡献明细视图的数据，按圈选组核对订单号、原金额和组内计入金额。"""
+    if view_id is not None:
+        view = contribution_service.view_by_id(view_id)
+        if view is None:
+            return {"available": False, "reason": f"成交贡献视图 {view_id} 不存在",
+                    "groups": [], "orders": []}
+        if cohort_id not in (
+            view["snapshots"]["A"]["cohort_id"],
+            view["snapshots"]["B"]["cohort_id"],
+        ):
+            return {"available": False,
+                    "reason": f"分群 {cohort_id} 不在成交贡献视图 {view_id} 的圈选范围内",
+                    "groups": [], "orders": []}
+    else:
+        view = contribution_service.latest_view(cohort_id)
+    if view is None:
+        return {"available": False, "reason": "该分群尚未发布成交贡献视图",
+                "groups": [], "orders": []}
+
+    detail = contribution_service.view_detail(view["view_id"])
+    groups = []
+    orders: list[dict[str, Any]] = []
+    for group in detail["groups"]:
+        drill = contribution_service.group_drill(view["view_id"], group["group_key"])
+        groups.append({
+            "group_key": group["group_key"],
+            "cohort_id": group["cohort_id"],
+            "cohort_name": group["cohort_name"],
+            "amount": drill["summary"]["group_amount"],
+            "original_order_amount": drill["summary"]["original_order_amount"],
+            "order_count": drill["summary"]["order_count"],
+            "user_count": drill["summary"]["user_count"],
+            "membership_version": drill["membership_version"],
+            "reconciled": drill["reconciliation"]["reconciled"],
+        })
+        for order in drill["orders"]:
+            orders.append({
+                "group_key": group["group_key"],
+                "order_no": order["order_no"],
+                "user_id": order["user_id"],
+                "paid_at": order["paid_at"],
+                "original_amount": order["original_amount"],
+                "group_amount": order["allocations"][group["group_key"]],
+                "matched_groups": order["matched_groups"],
+                "allocation_method": order["allocation_method"],
+                "counted_once_amount": order["counted_once_amount"],
+            })
+
+    return {
+        "available": True,
+        "view": detail["view"],
+        "summary": detail["summary"],
+        "group_count": len(groups),
+        "groups": groups,
+        "order_count": len(orders),
+        "orders": orders,
     }
 
 

@@ -12,6 +12,14 @@
         <button class="btn" data-testid="export" type="button" @click="exportRows">
           导出{{ meta.name }}清单
         </button>
+        <RouterLink
+          v-if="meta.key === 'cohort'"
+          class="btn"
+          data-testid="open-contribution"
+          to="/cohort-contribution"
+        >
+          成交贡献明细
+        </RouterLink>
       </div>
     </header>
 
